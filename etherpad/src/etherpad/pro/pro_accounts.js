@@ -338,9 +338,9 @@ function verify(assertion, audience) {
   if (! audience) {
     throw new Error("Unable to verify, missing audience argument.");
   }
-  result = urlPost("https://browserid.org/verify", body);
+  result = urlPost("https://verifier.login.persona.org/verify", body);
   if (result.error) {
-    throw new Error("Error with https://browserid.org/verify " + result.error.message);
+    throw new Error("Error with https://verifier.login.persona.org/verify " + result.error.message);
   } else {
     bf = net.appjet.common.util.BetterFile.getStreamBytes(result.content);
     content = new java.lang.String(bf, 'utf-8');
