@@ -179,7 +179,7 @@ function Ace2Editor() {
       iframeHTML.push($$INCLUDE_JS_Q("ace2_common.js skiplist.js virtual_lines.js easysync2.js cssmanager.js colorutils.js undomodule.js contentcollector.js changesettracker.js linestylefilter.js domline.js"));
       iframeHTML.push($$INCLUDE_JS_Q("ace2_inner.js"));
       iframeHTML.push('\'\\n<style type="text/css" title="dynamicsyntax"></style>\\n\'');
-      iframeHTML.push('\'</head><body id="innerdocbody" class="syntax" spellcheck="false">&nbsp;</body></html>\'');
+      iframeHTML.push('\'</head><body id="innerdocbody" class="syntax" spellcheck="true">&nbsp;</body></html>\'');
 
       var outerScript = 'editorId = "'+info.id+'"; editorInfo = parent.'+
 	thisFunctionsName+'.registry[editorId]; '+

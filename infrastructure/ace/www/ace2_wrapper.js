@@ -154,7 +154,7 @@ ACEPlain.prototype.init = function(containerId, initialCode, done) {
     css('padding', 0).
     css('background', 'transparent').
     css('color', '#000').
-    attr('spellcheck', false);
+    attr('spellcheck', true);
 
   // add textarea to container
   container.append(textArea);
