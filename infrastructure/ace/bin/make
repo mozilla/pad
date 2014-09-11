@@ -27,7 +27,7 @@ def superpack(input: String): String = {
   def containsSpecialChar(str: String) = str.exists(specialCharsSet.contains(_));
   
   val toks:Array[String] = (
-    "@|[a-zA-Z0-9]+|[^@a-zA-Z0-9]{1,3}").r.findAllIn(input).collect.toArray;
+    "@|[a-zA-Z0-9]+|[^@a-zA-Z0-9]{1,3}").r.findAllIn(input).toSeq.toArray;
   
   val stringCounts = {
     val m = new scala.collection.mutable.HashMap[String,Int];
@@ -49,10 +49,10 @@ def superpack(input: String): String = {
   val thingsToReplace:Seq[String] = estimatedSavings.map(_._1);
   assert(encodeNames.length >= thingsToReplace.length);
   
-  val replacements = Map(thingsToReplace.elements.zipWithIndex.map({
+  val replacements = Map(thingsToReplace.zipWithIndex.map({
     case (str, i) => (str, encodeNames(i));
-  }).collect:_*);
-  def encode(tk: String) = if (replacements.contains(tk)) replacements(tk) else tk;
+  }): _*);
+  def encode(tk: String): String = if (replacements.contains(tk)) replacements(tk) else tk;
   
   val afterReplace = toks.map(encode(_)).mkString.replaceAll(
     "(["+specialChars+"])(?=..[^0-9A-Z])(00|0)", "$1");
@@ -115,7 +115,6 @@ def superpack(input: String): String = {
 }
 
 def doMake {
-
   lazy val isEtherPad = (args.length >= 2 && args(1) == "etherpad");
   lazy val isNoHelma = (args.length >= 2 && args(1) == "nohelma");
     
@@ -125,7 +124,7 @@ def doMake {
     val buf = new Array[Char](1024);
     var numRead = 0;
     while({ numRead = reader.read(buf); numRead } != -1) {
-      builder.append(buf, 0, numRead);
+      builder.appendAll(buf, 0, numRead);
     }
     reader.close;
     return builder.toString;
@@ -200,7 +199,6 @@ def doMake {
   val srcDir = "www";
   val destDir = "build";
   var code = getFile(srcDir+"/ace2_outer.js");
-
   val useCompression = true; //if (isEtherPad) false else true;
 
   code = stringReplace(code, "\\$\\$INCLUDE_([A-Z_]+)\\([\"']([^\"']+)[\"']\\)", false, (m:MatchResult) => {
