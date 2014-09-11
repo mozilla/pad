@@ -24,15 +24,13 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse, HttpServlet}
 
 import scala.collection.mutable.{ListBuffer, LinkedHashSet, HashMap, ArrayBuffer};
 import scala.collection.immutable.Map;
-import scala.collection.jcl.Conversions;
+import scala.collection.JavaConversions;
 
 import org.mozilla.javascript.{Scriptable, Context, Function, ScriptableObject, JavaScriptException};
 import org.mortbay.jetty.RetryRequest;
 
 import net.appjet.bodylock.{BodyLock, Executable, JSRuntimeException, JSCompileException};
 import net.appjet.common.util.{HttpServletRequestFactory, BetterFile};
-
-import Util.enumerationToRichEnumeration;
 
 // Removed due to licensing issues; REMOVED_COS_OF_COS
 // import com.oreilly.servlet.MultipartFilter;
@@ -41,7 +39,7 @@ class RequestWrapper(val req: HttpServletRequest) {
   req.setCharacterEncoding("UTF-8");
 // REMOVED_COS_OF_COS ... ?
 //   private lazy val parameterNames =
-//     (for (i <- Conversions.convertSet(req.getParameterMap.keySet().asInstanceOf[java.util.Set[String]])) yield i).toList.toArray
+//     (for (i <- JavaConversions.asSet(req.getParameterMap.keySet().asInstanceOf[java.util.Set[String]])) yield i).toList.toArray
 //   private def parameterValues(k: String) = req.getParameterValues(k);
   def headerCapitalize(s: String) =
     s.split("-").map(
@@ -94,7 +92,7 @@ class RequestWrapper(val req: HttpServletRequest) {
       }
       req.getAttribute("ajcache_parameters").asInstanceOf[Map[String, Array[String]]];
     } else {
-      Conversions.convertMap(req.getParameterMap().asInstanceOf[java.util.Map[String, Array[String]]]);
+      JavaConversions.mapAsScalaMap(req.getParameterMap().asInstanceOf[java.util.Map[String, Array[String]]]): collection.Map[String, Array[String]];
     }
   }
   
@@ -105,8 +103,8 @@ class RequestWrapper(val req: HttpServletRequest) {
     false);
   def headers(globalScope: Scriptable) = new ScriptableFromMapOfStringArrays(
     globalScope, 
-    req.getHeaderNames().asInstanceOf[Enumeration[String]]
-      .map(headerCapitalize).toList,
+    JavaConversions.enumerationAsScalaIterator(req.getHeaderNames().asInstanceOf[Enumeration[String]])
+      .map(headerCapitalize _).toList,
     h => h match {
       case "Host" => Some(Array(host));
       case hh => Some(Util.enumerationToArray(req.getHeaders(headerCapitalize(hh)).asInstanceOf[Enumeration[String]])) },
@@ -136,7 +134,7 @@ class RequestWrapper(val req: HttpServletRequest) {
 //    } else {
 //      val r = req.asInstanceOf[com.oreilly.servlet.MultipartWrapper];
 //      val fileScriptables = new HashMap[String, Scriptable]();
-//      val fileBytes = new HashMap[String, Array[byte]]();
+//      val fileBytes = new HashMap[String, Array[Byte]]();
 //      new ScriptableFromMapOfScriptableArrays(globalScope,
 //        r.getFileNames().asInstanceOf[Enumeration[String]].toList,
 //        name => {
@@ -164,7 +162,7 @@ class RequestWrapper(val req: HttpServletRequest) {
 
 class ResponseWrapper(val res: HttpServletResponse) {
   private lazy val outputStrings = new ListBuffer[String];
-  private lazy val outputBytes = new ListBuffer[Array[byte]];
+  private lazy val outputBytes = new ListBuffer[Array[Byte]];
   private var statusCode = 200;
   private var contentType = "text/html; charset=utf-8";
   private var redirect: String = null;
@@ -207,7 +205,7 @@ class ResponseWrapper(val res: HttpServletResponse) {
   }
   def getOutput() = outputStrings.mkString("");
   def writeBytes(bytes: String) {
-    val a = new Array[byte](bytes.length());
+    val a = new Array[Byte](bytes.length());
     bytes.getBytes(0, bytes.length(), a, 0);
     outputBytes += a;
   }
@@ -238,7 +236,7 @@ class ResponseWrapper(val res: HttpServletResponse) {
     headers += ((name, value, res => res.addHeader(name, value)));
   }
   def getHeader(name: String) = {
-    headers.filter(_._1 == name).map(_._2).toSeq.toArray;
+    headers.filter(_._1 == name).toArray.map(_._2);
   }
   def removeHeader(name: String) {
     headers.removeAll(name);
@@ -561,11 +559,11 @@ object execution {
       if (currentContext != null) {
         currentContext.request;
       } else {
-        val fakeHeaders = scala.collection.jcl.Conversions.convertMap(
+        val fakeHeaders = JavaConversions.mapAsScalaMap(
           new java.util.HashMap[String, String]); 
         fakeHeaders("Host") = "unknown.local";
         new RequestWrapper(HttpServletRequestFactory.createRequest(
-            "/", fakeHeaders.underlying, "GET", null)) { 
+            "/", JavaConversions.mapAsJavaMap(fakeHeaders), "GET", null)) { 
           override val isFake = true;
         }
       }
@@ -609,11 +607,11 @@ object execution {
         if (currentContext != null) {
           currentContext.request;
         } else {
-          val fakeHeaders = scala.collection.jcl.Conversions.convertMap(
+          val fakeHeaders = JavaConversions.mapAsScalaMap(
             new java.util.HashMap[String, String]); 
           fakeHeaders("Host") = "unknown.local";
           new RequestWrapper(HttpServletRequestFactory.createRequest(
-              "/", fakeHeaders.underlying, "GET", null)) { 
+              "/", JavaConversions.mapAsJavaMap(fakeHeaders), "GET", null)) { 
             override val isFake = true;
           }
         }

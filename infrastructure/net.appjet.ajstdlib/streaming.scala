@@ -17,6 +17,7 @@
 package net.appjet.ajstdlib;
 
 import scala.collection.mutable.{Queue, HashMap, SynchronizedMap, ArrayBuffer};
+import scala.collection.JavaConversions;
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse, HttpServlet};
 import org.mortbay.jetty.servlet.{ServletHolder, Context};
 import org.mortbay.jetty.{HttpConnection, Handler, RetryRequest};
@@ -30,7 +31,6 @@ import java.lang.ref.WeakReference;
 import org.mozilla.javascript.{Context => JSContext, Scriptable};
 
 import net.appjet.oui._;
-import net.appjet.oui.Util.enumerationToRichEnumeration;
 import net.appjet.common.util.HttpServletRequestFactory;
 
 trait SocketConnectionHandler {
@@ -233,7 +233,7 @@ class StreamingSocket(val id: String, handler: SocketConnectionHandler) {
   lazy val attributes = new HashMap[String, String] with SynchronizedMap[String, String];
   
   def channel(typ: String, create: Boolean, subType: String): Option[Channel] = {
-    val channelType = ChannelType.valueOf(typ);
+    val channelType = ChannelType.withNameOpt(typ);
     if (channelType.isEmpty) {
       streaminglog(Map(
         "type" -> "error",
@@ -254,7 +254,7 @@ class StreamingSocket(val id: String, handler: SocketConnectionHandler) {
   var lastConfirmedSeqNumber = 0;
   
   // external API
-  def sendMessage(isControl: boolean, body: String) {
+  def sendMessage(isControl: Boolean, body: String) {
     if (hasConnected && ! shutdown) {
       synchronized {
         lastSentSeqNumber += 1;
@@ -311,7 +311,7 @@ class StreamingSocket(val id: String, handler: SocketConnectionHandler) {
       }
     }
   }
-  def getUnconfirmedMessages(channel: Channel): Collection[SocketMessage] = {
+  def getUnconfirmedMessages(channel: Channel): Iterable[SocketMessage] = {
     synchronized {
       if (currentChannel.isDefined && currentChannel.get == channel) {
         for (i <- lastConfirmedSeqNumber+1 until lastSentSeqNumber+1) 
@@ -337,7 +337,7 @@ class StreamingSocket(val id: String, handler: SocketConnectionHandler) {
   def useChannel(seqNo: Int, channelType0: String, req: HttpServletRequest) = synchronized {
     if (seqNo <= lastChannelUpdate) false else {
       lastChannelUpdate = seqNo;
-      val channelType = ChannelType.valueOf(channelType0);
+      val channelType = ChannelType.withNameOpt(channelType0);
       if (channelType.isDefined) {
         val channel = activeChannels.get(channelType.get);
         if (channel.isDefined) {
@@ -422,8 +422,12 @@ class StreamingSocket(val id: String, handler: SocketConnectionHandler) {
     "connection" -> id));
 }
 
-object ChannelType extends Enumeration("shortpolling", "longpolling", "streaming") {
+object ChannelType extends Enumeration {
   val ShortPolling, LongPolling, Streaming = Value;
+
+  /* Enumeration.valueOf is deprecated in Scala 2.8, but the replacement (withName) is not suitable for the
+   * case where we don't know if an Enumeration exists with the provided name */
+  def withNameOpt(s: String): Option[ChannelType.Value] = values.find(_.toString == s)
 }
 
 object Channels {
@@ -525,7 +529,7 @@ trait IFrameChannel extends StreamingChannel {
   
   def header(req: HttpServletRequest) = {
     val document_domain = 
-        "\""+req.getHeader("Host").split("\\.").slice(2).mkString(".").split(":")(0)+"\"";
+        "\""+req.getHeader("Host").split("\\.").take(2).mkString(".").split(":")(0)+"\"";
     """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
 "http://www.w3.org/TR/html4/strict.dtd">
 <html><head><title>f</title></head><body id="thebody" onload="(!parent.closed)&&d()"><script type="text/javascript">document.domain = """+document_domain+""";
@@ -789,7 +793,7 @@ class StreamingSocketServlet extends HttpServlet {
               "type" -> "event",
               "event" -> "restart-failure",
               "connection" -> socketId));
-            val failureChannel = ChannelType.valueOf(channelType).map(Channels.createNew(_, null, subType));
+            val failureChannel = ChannelType.withNameOpt(channelType).map(Channels.createNew(_, null, subType));
             if (failureChannel.isDefined) {
               failureChannel.get.sendRestartFailure(ec);
             } else {
@@ -813,7 +817,7 @@ class StreamingSocketServlet extends HttpServlet {
   def describeRequest(req: HttpServletRequest) {
     println(req.getMethod+" on "+req.getRequestURI()+"?"+req.getQueryString());
     for (pname <- 
-        req.getParameterNames.asInstanceOf[java.util.Enumeration[String]]) {
+        JavaConversions.enumerationAsScalaIterator(req.getParameterNames.asInstanceOf[java.util.Enumeration[String]])) {
       println("  "+pname+" -> "+req.getParameterValues(pname).mkString("[", ",", "]"));
     }
   }
@@ -861,7 +865,7 @@ class StreamingSocketServlet extends HttpServlet {
                   val msgParts = msg.split(":");
                   socket.get.useChannel(java.lang.Integer.parseInt(msgParts(1)), msgParts(2), req);
                 } else if (msg.startsWith("kill")) {
-                  socket.get.kill("client request: "+msg.substring(Math.min(msg.length, "kill:".length)));
+                  socket.get.kill("client request: "+msg.substring(math.min(msg.length, "kill:".length)));
                 } else {
                   streaminglog(Map(
                     "type" -> "error",

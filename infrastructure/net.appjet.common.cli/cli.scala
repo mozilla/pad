@@ -45,7 +45,7 @@ class CliParser(predef: Array[CliOption]) {
 
   def usage = {
     val sb = new StringBuilder();
-    var maxLength = predef.map(opt => 2 + opt.name.length + opt.argName.map(_.length + 1).getOrElse(0) ).reduceRight(Math.max)+2;
+    var maxLength = predef.map(opt => 2 + opt.name.length + opt.argName.map(_.length + 1).getOrElse(0) ).reduceRight(math.max)+2;
     for ((n, opt) <- options) {
       sb.append("  --"+n+opt.argName.map("=<"+_+">").getOrElse("")+"\n");
       sb.append("     "+WordUtils.wrap(opt.description, displayWidth-5).split("\n").mkString("\n     "));

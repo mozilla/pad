@@ -24,7 +24,8 @@ import java.lang.annotation.Annotation;
 import java.text.SimpleDateFormat;
 
 import scala.collection.mutable.{HashMap, SynchronizedMap, HashSet};
-import scala.collection.jcl.{IterableWrapper, Conversions};
+import scala.collection.JavaConversions;
+import JavaConversions.asScalaIterator
 
 import org.mortbay.thread.QueuedThreadPool;
 import org.mortbay.jetty.servlet.{Context, HashSessionIdManager, FilterHolder, ServletHolder};
@@ -39,8 +40,6 @@ import net.appjet.common.util.{BetterFile, HttpServletRequestFactory};
 import net.appjet.common.cli._;
 import net.appjet.bodylock.JSCompileException;
 
-import Util.enumerationToRichEnumeration;
-
 object main {
   val startTime = new java.util.Date();
   
@@ -51,10 +50,8 @@ object main {
   def setupFilesystem() {
     val logdir = new File(config.logDir+"/backend/access");
     if (! logdir.isDirectory())
-      if (! logdir.mkdirs()) {
-        println("Error: Could not create file system " + config.logDir+"/backend/access");
+      if (! logdir.mkdirs())
         quit(1);
-      }
   }
 
   val options =
@@ -94,12 +91,12 @@ object main {
   }
 
   def extractOptions(props: Properties) {
-    for (k <- for (o <- props.propertyNames()) yield o.asInstanceOf[String]) {
+    for (k <- for (o <- JavaConversions.enumerationAsScalaIterator(props.propertyNames())) yield o.asInstanceOf[String]) {
       config.values(k) = props.getProperty(k);
     }
   }
 
-  val startupExecutable = (new FixedDiskLibrary(new SpecialJarOrNotFile(config.ajstdlibHome, "onstartup.js"))).executable;
+  lazy val startupExecutable = (new FixedDiskLibrary(new SpecialJarOrNotFile(config.ajstdlibHome, "onstartup.js"))).executable;
   def runOnStartup() {
     execution.runOutOfBand(startupExecutable, "Startup", None, { error => 
       error match {
@@ -358,13 +355,13 @@ object main {
       }
       case e: org.mortbay.util.MultiException => {
         println("SERVER ERROR: Couldn't start server; multiple errors.");
-        for (i <- new IterableWrapper[Throwable] { override val underlying = e.getThrowables.asInstanceOf[java.util.List[Throwable]] }) {
+        for (i <- JavaConversions.iterableAsScalaIterable(e.getThrowables)) {
           i match {
             case se: java.net.SocketException => {
               socketError(c, se);
             }
             case e => 
-              println("SERVER ERROR: Couldn't start server: "+i.getMessage());
+              println("SERVER ERROR: Couldn't start server: "+i.asInstanceOf[Throwable].getMessage());
           }
         }
         java.lang.Runtime.getRuntime().halt(1);

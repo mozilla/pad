@@ -21,19 +21,15 @@ import java.util.Date;
 import scala.collection.mutable.{HashMap, HashSet, Set, Map, ArrayBuffer};
 import scala.util.Sorting;
 
-trait BucketMap extends scala.collection.mutable.Map[int, BucketedLastHits] {
+trait BucketMap extends scala.collection.mutable.Map[Int, BucketedLastHits] {
   def t = 1000*60;
-  override def apply(s: int) = synchronized { getOrElseUpdate(s, new BucketedLastHits(t)) };
-  def counts = { val p = this; new scala.collection.Map.Projection[int, int] {
-    def size = p.size;
-    def get(s: int) = p.get(s).map(_.count);
-    def elements = p.elements.map(o => (o._1, o._2.count));
-  }};
+  override def apply(s: Int) = synchronized { getOrElseUpdate(s, new BucketedLastHits(t)) };
+  def counts = mapValues(_.count)
 }
 
-abstract class BucketKeeper[A, B](val size: Long, val numbuckets: int, val noUpdate: Boolean) {
+abstract class BucketKeeper[A: ClassManifest, B: ClassManifest](val size: Long, val numbuckets: Int, val noUpdate: Boolean) {
   def this(size: Long, noUpdate: Boolean) = 
-    this(size, Math.max(100, if (noUpdate) 1 else (size/60000).toInt), noUpdate)
+    this(size, math.max(100, if (noUpdate) 1 else (size/60000).toInt), noUpdate)
   def this(size: Long) = this(size, false);
 
   val buckets = new Array[A](numbuckets);
@@ -49,7 +45,7 @@ abstract class BucketKeeper[A, B](val size: Long, val numbuckets: int, val noUpd
   
   protected def bucketAtTime(d: Date) = {
     val msAgo = lastSwitch - d.getTime();
-    val bucketsAgo = Math.floor(msAgo/millisPerBucket).asInstanceOf[Int];
+    val bucketsAgo = math.floor(msAgo/millisPerBucket).asInstanceOf[Int];
     if (bucketsAgo < numbuckets) {
       val bucket = (currentBucket - bucketsAgo + numbuckets) % numbuckets
       // println("Applying to old bucket: "+bucket+" / current: "+currentBucket+", old count: "+count);
@@ -80,7 +76,7 @@ abstract class BucketKeeper[A, B](val size: Long, val numbuckets: int, val noUpd
   
   def history(bucketsPerSample: Int, numSamples: Int): Array[B] = withSyncUpdate {
     val bseq = bucketsInOrder.reverse.take(bucketsPerSample*numSamples);
-    val sampleCount = Math.min(numSamples, bseq.length);
+    val sampleCount = math.min(numSamples, bseq.length);
     val samples =
       for (i <- 0 until sampleCount) yield {
         mergeBuckets(bseq.slice(i*bucketsPerSample, (i+1)*bucketsPerSample));
@@ -104,7 +100,7 @@ extends BucketKeeper[Set[Any], Int](size, noUpdate) {
   }
   
   override def mergeBuckets(b: Seq[Set[Any]]) = {
-    b.foldLeft(scala.collection.immutable.Set[Any]())(_ ++ _).size;
+    b.foldLeft(collection.mutable.Set[Any]())(_ ++= _).size;
   }
   
   def hit(d: Date, value: Any): Unit = withSyncUpdate {
@@ -153,7 +149,7 @@ class BucketedLastHits(size: Long, noUpdate: Boolean)
 extends BucketKeeper[Int, Int](size, noUpdate) {
   def this(size: Long) = this(size, false);
       
-  override protected def bucketClear(index: int): Unit = {
+  override protected def bucketClear(index: Int): Unit = {
     buckets(index) = 0;
   }
 
@@ -185,7 +181,7 @@ extends BucketKeeper[ArrayBuffer[Int], Function1[Float, Int]](size, noUpdate) {
         0
       } else {
         elements(
-          Math.round(percentile/100.0f*(elements.length-1)));
+          math.round(percentile/100.0f*(elements.length-1)));
       }
     }    
   }
@@ -212,9 +208,9 @@ extends BucketKeeper[ArrayBuffer[Int], Function1[Float, Int]](size, noUpdate) {
 }
 
 object appstats {
-  val minutelyStatus = new HashMap[int, BucketedLastHits] with BucketMap;
-  val hourlyStatus = new HashMap[int, BucketedLastHits] with BucketMap { override val t = 1000*60*60 };
-  val dailyStatus = new HashMap[int, BucketedLastHits] with BucketMap { override val t = 1000*60*60*24 };
-  val weeklyStatus = new HashMap[int, BucketedLastHits] with BucketMap { override val t = 1000*60*60*24*7 };
+  val minutelyStatus = new HashMap[Int, BucketedLastHits] with BucketMap;
+  val hourlyStatus = new HashMap[Int, BucketedLastHits] with BucketMap { override val t = 1000*60*60 };
+  val dailyStatus = new HashMap[Int, BucketedLastHits] with BucketMap { override val t = 1000*60*60*24 };
+  val weeklyStatus = new HashMap[Int, BucketedLastHits] with BucketMap { override val t = 1000*60*60*24*7 };
   val stati = Array(minutelyStatus, hourlyStatus, dailyStatus, weeklyStatus);
 }

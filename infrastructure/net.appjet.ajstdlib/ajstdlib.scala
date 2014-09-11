@@ -96,7 +96,7 @@ object md5 {
     val bytes = input.getBytes("UTF-8");
     md5(bytes);
   }
-  def md5(bytes: Array[byte]): String = {
+  def md5(bytes: Array[Byte]): String = {
     var md = MessageDigest.getInstance("MD5");
     var digest = md.digest(bytes);
     var builder = new StringBuilder();
@@ -217,7 +217,6 @@ object email {
         val debug = false;
 
         val props = new Properties;
-	props.put("mail.smtp.starttls.enable", config.smtpStartTls);
         props.put("mail.smtp.host", config.smtpServerHost);
         props.put("mail.smtp.port", config.smtpServerPort.toString());
         if (config.smtpUser != "")

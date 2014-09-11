@@ -161,7 +161,7 @@ object Encryptomatic {
 		readPrivateKey(keyType, privateKey));
   }  
 
-  def sign(source: InputStream, key: PrivateKey): Array[byte] = {
+  def sign(source: InputStream, key: PrivateKey): Array[Byte] = {
     val dsa = Signature.getInstance("SHA1withDSA");
     dsa.initSign(key);
     val inBytes = new Array[Byte](4096);
@@ -173,7 +173,7 @@ object Encryptomatic {
     dsa.sign();
   }
 
-  def verify(source: InputStream, key: PublicKey, sig: Array[byte]): Boolean = {
+  def verify(source: InputStream, key: PublicKey, sig: Array[Byte]): Boolean = {
     val dsa = Signature.getInstance("SHA1withDSA");
     dsa.initVerify(key);
     val inBytes = new Array[Byte](4096);
@@ -185,7 +185,7 @@ object Encryptomatic {
     dsa.verify(sig)
   }
   
-  def encrypt(source: InputStream, key: PublicKey): Array[byte] = {
+  def encrypt(source: InputStream, key: PublicKey): Array[Byte] = {
     val cipher = Cipher.getInstance("RSA");
     cipher.init(Cipher.ENCRYPT_MODE, key);
     val inBytes = new Array[Byte](100);
@@ -203,7 +203,7 @@ object Encryptomatic {
     outBytesStream.toByteArray();
   }
   
-  def decrypt(source: InputStream, key: PrivateKey): Array[byte] = {
+  def decrypt(source: InputStream, key: PrivateKey): Array[Byte] = {
     val in = new DataInputStream(source);
     def readBlock() = {
       val length = in.readShort();

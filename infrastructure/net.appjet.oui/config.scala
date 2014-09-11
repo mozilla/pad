@@ -23,7 +23,7 @@ import org.mortbay.jetty.servlet.Context;
 import org.mozilla.javascript.{Scriptable, ScriptableObject, Context => JSContext};
 
 import net.appjet.common.util.BetterFile;
-
+import net.appjet.oui.ConfigParam;
 
 object config {
   val values = new HashMap[String, String];
@@ -45,8 +45,8 @@ object config {
   def intOrElse(name: String, default: Int) = values.get(name).map(Integer.parseInt(_)).getOrElse(default);
   def longOrElse(name: String, default: Long) = values.get(name).map(java.lang.Long.parseLong(_)).getOrElse(default);
 
-  @ConfigParam("Read configuration options from this file before processing any command-line flags.")
-              { val argName = "file" }
+  @ConfigParam(value = "Read configuration options from this file before processing any command-line flags.",
+               argName = "file")
   def configFile = stringOrElse("configFile", null);
 
   // configuation parameters
@@ -61,66 +61,52 @@ object config {
   @ConfigParam("Activate \"profiling\" mode.")
   def profile = boolOrElse("profile", false);
 
-  @ConfigParam("Directory to use for storing appjet support files, logs, etc.  This directory will be created if it does not exist and must be writeable by the user who runs appjet.jar.  Defaults to current working directory.")
-	      { val argName = "directory" }
+  @ConfigParam(value = "Directory to use for storing appjet support files, logs, etc.  This directory will be created if it does not exist and must be writeable by the user who runs appjet.jar.  Defaults to current working directory.",
+	             argName = "directory")
   def appjetHome = stringOrElse("appjetHome", "appjet");
   
   @ConfigParam("Directory to use for storing built-in database (Apache Derby) files. Will be created if it doesn't exist. Defaults to [appjetHome]/db")
   def derbyHome = stringOrElse("derbyHome", "[appjetHome]/derbydb");
 
-  @ConfigParam("Directory to use for storing appserver logs. Defaults to [appjetHome]/log/appserver")
-              { val argName = "directory" }
+  @ConfigParam(value = "Directory to use for storing appserver logs. Defaults to [appjetHome]/log/appserver",
+               argName = "directory")
   def logDir = stringOrElse("logDir", "[appjetHome]/log/appserver");
-
-  @ConfigParam("Bla bla")
-              { val argName = "" }
-  def logInclude = stringOrElse("logInclude", "");
-
-  @GeneratedConfigParam
-  def logIncludeLst = if (logInclude != "") logInclude.split(",") else null;
   
-  @ConfigParam("Bla bla")
-              { val argName = "" }
-  def logExclude = stringOrElse("logExclude", "");
-
-  @GeneratedConfigParam
-  def logExcludeLst = if (logExclude != "") logExclude.split(",") else null;
-  
-  @ConfigParam("Optional alternative directory to load built-in libraries from.  Used by AppJet platform hackers to develop and debug built-in libraries.  Default: use built-in libraries.")
-	      { val argName = "directory" }
+  @ConfigParam(value = "Optional alternative directory to load built-in libraries from.  Used by AppJet platform hackers to develop and debug built-in libraries.  Default: use built-in libraries.",
+               argName = "directory")
   def ajstdlibHome = stringOrElse("ajstdlibHome", null);
 
-  @ConfigParam("Optional directory to specify as the \"app home\".")
-              { val argName = "directory" }
+  @ConfigParam(value = "Optional directory to specify as the \"app home\".",
+               argName = "directory")
   def appHome = stringOrElse("appHome", "");
   
   @ConfigParam("Whether to generate https URLs even if running locally behind HTTP (useful for Apache handling HTTPS)")
   def useHttpsUrls = boolOrElse("useHttpsUrls", false);
 
-  @ConfigParam("Search path for modules imported via \"import\". Defaults to current working directory.")
-              { val argName = "dir1:dir2:..." }
+  @ConfigParam(value = "Search path for modules imported via \"import\". Defaults to current working directory.",
+               argName = "dir1:dir2:...")
   def modulePath = stringOrElse("modulePath", null);
   def moduleRoots =
     Array.concat(Array("."), if (modulePath != null) modulePath.split(":") else Array[String](), Array(ajstdlibHome));
 
-  @ConfigParam("Where to read the static files from on the local filesystem. Don't specify this to read static files from the classpath/JAR.")
-              { val argName = "directory" }
+  @ConfigParam(value = "Where to read the static files from on the local filesystem. Don't specify this to read static files from the classpath/JAR.",
+               argName = "directory")
   def useVirtualFileRoot = stringOrElse("useVirtualFileRoot", null);
   
-  @ConfigParam("Directory to use for storing the temporary sessions file on shutdown. Will be created if it does not exist.")
-              { val argName = "directory" }
+  @ConfigParam(value = "Directory to use for storing the temporary sessions file on shutdown. Will be created if it does not exist.",
+               argName = "directory")
   def sessionStoreDir = stringOrElse("sessionStoreDir", "[appjetHome]/sessions");
 
   // performance tuning
-  @ConfigParam("Create this many runners before opening up the server.")
-              { val argName = "count" }
+  @ConfigParam(value = "Create this many runners before opening up the server.",
+               argName = "count")
   def preloadRunners = intOrElse("preloadRunners", 0);
 
-  @ConfigParam("Have this many JDBC connections available in the pool.")
-              { val argName = "count" }
+  @ConfigParam(value = "Have this many JDBC connections available in the pool.",
+               argName = "count")
   def jdbcPoolSize = intOrElse("jdbcPoolSize", 10);
-  @ConfigParam("Max count of worker threads.")
-              { val argName = "num" }
+  @ConfigParam(value = "Max count of worker threads.",
+               argName = "num")
   def maxThreads = intOrElse("maxThreads", 250);
 
   // specifying ports and such
@@ -133,24 +119,24 @@ object config {
   @ConfigParam("Whether to show the port numbers to the outside world (false: assume ports visible from the outside are the default http/https ports)")
   def hidePorts = boolOrElse("hidePorts", false);
 
-  @ConfigParam("[host:]port on which to serve the app. Default: 8080.")
-              { val argName = "[host:]port" }
+  @ConfigParam(value = "[host:]port on which to serve the app. Default: 8080.",
+               argName = "[host:]port")
   def listen = stringOrElse("listen", "8080");
   @GeneratedConfigParam
   def listenHost = extractHostAndPort(listen)._1;
   @GeneratedConfigParam
   def listenPort = extractHostAndPort(listen)._2;
 
-  @ConfigParam("[host:]port on which to serve the app using SSL. Default: none.")
-              { val argName = "[host:]port" }
+  @ConfigParam(value = "[host:]port on which to serve the app using SSL. Default: none.",
+               argName = "[host:]port")
   def listenSecure = stringOrElse("listenSecure", "0");
   @GeneratedConfigParam
   def listenSecureHost = extractHostAndPort(listenSecure)._1;
   @GeneratedConfigParam
   def listenSecurePort = extractHostAndPort(listenSecure)._2;
 
-  @ConfigParam("[host:]port:port on which to listen for monitoring. Default: none.")
-              { val argName = "[host:]primaryPort:secondaryPort" }
+  @ConfigParam(value = "[host:]port:port on which to listen for monitoring. Default: none.",
+               argName = "[host:]primaryPort:secondaryPort")
   def listenMonitoring = stringOrElse("listenMonitoring", "0:0");
   def extractHostAndPortPort(s: String): (String, Int, Int) = {
     val spl = s.split(":", 3);
@@ -166,8 +152,8 @@ object config {
   @GeneratedConfigParam
   def listenMonitoringSecondaryPort = extractHostAndPortPort(listenMonitoring)._3;
 
-  @ConfigParam("[host:]port on which to listen for RPCs (via SARS). Default: none.")
-              { val argName = "[host:]port" }
+  @ConfigParam(value = "[host:]port on which to listen for RPCs (via SARS). Default: none.",
+               argName = "[host:]port")
   def listenSars = stringOrElse("listenSars", "0");
   @GeneratedConfigParam
   def listenSarsHost = extractHostAndPort(listenSars)._1;
@@ -175,46 +161,43 @@ object config {
   def listenSarsPort = extractHostAndPort(listenSars)._2;
 
   // Licensing
-  @ConfigParam("Private key for generating license keys.")
-              { val argName = "pathToKey" }
+  @ConfigParam(value = "Private key for generating license keys.",
+               argName = "pathToKey")
   def licenseGeneratorKey = stringOrElse("licenseGeneratorKey", null);
 
   // SARS
-  @ConfigParam("SARS auth key. Default: \"appjet\".")
-	      { val argName = "authkey" }
+  @ConfigParam(value = "SARS auth key. Default: \"appjet\".",
+	             argName = "authkey")
   def sarsAuthKey = stringOrElse("sarsAuthKey", "appjet");
 
   // SSL
-  @ConfigParam("[SSL] Keystore location. Default: appjetHome/sslkeystore.")
-              { val argName = "keystore" }
+  @ConfigParam(value = "[SSL] Keystore location. Default: appjetHome/sslkeystore.",
+               argName = "keystore")
   def sslKeyStore = stringOrElse("sslKeyStore", appjetHome+"/sslkeystore");
   def sslKeyStore_isSet = values.contains("sslKeyStore");
-  @ConfigParam("[SSL] Key password. Default: same as store password.")
-              { val argName = "password" }
+  @ConfigParam(value = "[SSL] Key password. Default: same as store password.",
+               argName = "password")
   def sslKeyPassword = stringOrElse("sslKeyPassword", "[sslStorePassword]");
-  @ConfigParam("[SSL] Store password. Default: 'appjet'.")
-              { val argName = "password" }
+  @ConfigParam(value = "[SSL] Store password. Default: 'appjet'.",
+               argName = "password")
   def sslStorePassword = stringOrElse("sslStorePassword", "appjet");
 
   // email
-  @ConfigParam("host:port of mail server to use for sending email. Default: localhost:25.")
-	      { val argName = "host:port" }
+  @ConfigParam(value = "host:port of mail server to use for sending email. Default: localhost:25.",
+	             argName = "host:port")
   def smtpServer = stringOrElse("smtpServer", "localhost:25");
   def smtpServerHost = extractHostAndPort(smtpServer)._1;
   def smtpServerPort = extractHostAndPort(smtpServer)._2;
-  @ConfigParam("username for authentication to mail server. Default: no authentication.")
-              { val argName = "username" }
+  @ConfigParam(value = "username for authentication to mail server. Default: no authentication.",
+               argName = "username")
   def smtpUser = stringOrElse("smtpUser", "");
-  @ConfigParam("password for authentication to mail server. Default: no authentication.")
-              { val argName = "password" } 
+  @ConfigParam(value = "password for authentication to mail server. Default: no authentication.",
+               argName = "password")
   def smtpPass = stringOrElse("smtpPass", "");
-  @ConfigParam("true or false to use starttls (TLS authentication) when connecting to mail server. Default: false.")
-              { val argName = "smtpStartTls" }
-  def smtpStartTls = stringOrElse("smtpStartTls", "false");
 
   // comet
-  @ConfigParam("prefix for all comet requests. Required to use Comet system.")
-	      { val argName = "path" }
+  @ConfigParam(value = "prefix for all comet requests. Required to use Comet system.",
+               argName = "path")
   def transportPrefix = stringOrElse("transportPrefix", null);
   @ConfigParam("Use a subdomain for all comet requests.")
   def transportUseWildcardSubdomains = boolOrElse("transportUseWildcardSubdomains", false);

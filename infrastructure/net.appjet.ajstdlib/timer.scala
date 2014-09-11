@@ -21,7 +21,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 object timer {
 
-  var _timings = new HashMap[String,ListBuffer[double]];
+  var _timings = new HashMap[String,ListBuffer[Double]];
   var _lock = new ReentrantLock;
   var _callstack = new ThreadLocal[ListBuffer[String]];
 
@@ -33,18 +33,18 @@ object timer {
     }
     _localcallstack += opname;
     var _oplabel = _localcallstack.mkString(".");
-    val startTime: long = System.nanoTime();
+    val startTime: Long = System.nanoTime();
 
     new {
       def done() {
-	val elapsedTimeMs: double = (System.nanoTime() - startTime) / 1.0e6;
+	val elapsedTimeMs: Double = (System.nanoTime() - startTime) / 1.0e6;
 
 	_lock.lock();
 	try {
-  	  var times = _timings.getOrElse(_oplabel, new ListBuffer[double]);
+  	  var times = _timings.getOrElse(_oplabel, new ListBuffer[Double]);
 	  /*
 	  if (times.size > 100000) {
-	    times = new ListBuffer[double];
+	    times = new ListBuffer[Double];
 	  }*/
 	  times += elapsedTimeMs;
 	  _timings.put(_oplabel, times);
@@ -65,11 +65,11 @@ object timer {
     }
   }
 
-  def getStats(opname: String): Array[double] = {
+  def getStats(opname: String): Array[Double] = {
     _lock.lock();
 
     try {
-      var times:ListBuffer[double] = _timings(opname);
+      var times:ListBuffer[Double] = _timings(opname);
       var total = times.foldRight(0.0)(_ + _);
       return Array(times.size, total, (total / times.size));
     } finally {  
@@ -79,7 +79,7 @@ object timer {
 
   def reset() {
     _lock.lock();
-    _timings = new HashMap[String,ListBuffer[double]];
+    _timings = new HashMap[String,ListBuffer[Double]];
     _lock.unlock();
   }
 }

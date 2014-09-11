@@ -23,8 +23,9 @@ import java.io.{File, FileNotFoundException, FileInputStream, IOException, ByteA
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.WeakHashMap;
 
-import scala.collection.mutable.{Subscriber, Message, Reset=>SReset};
-import scala.collection.jcl.Conversions._;
+import scala.collection.mutable.Subscriber;
+import scala.collection.script.{Message, Reset=>SReset}
+import scala.collection.JavaConversions._;
 
 trait WeakPublisher[A, This <: WeakPublisher[A, This]] { self: This => 
   val subscribers = new WeakHashMap[Subscriber[A, This], Unit];
@@ -157,7 +158,7 @@ class JarOrNotFile(root: String, fname: String) extends Subscriber[Message[Unit]
   val fileSep = "/";
   val isJar = (root == null);
   val streamBase = if (isJar) getClass().getResource((classBase+fname).replaceAll("/+", "/")) else null;
-  val file = if (! isJar) FileCache.file(root+fileSep+fname, this) else null;
+  lazy val file = if (! isJar) FileCache.file(root+fileSep+fname, this) else null;
 
   def openStream() = {
     if (isJar) streamBase.openStream;
@@ -347,8 +348,8 @@ class FixedDiskLibrary(srcfile: JarOrNotFile) extends DiskLibrary(srcfile.name) 
 
 class VariableDiskLibrary(libName: String) extends DiskLibrary(libName) {
   lazy val files0 = 
-    Array.concat(Array(new MirroredJarOrNotFile(null, libName)),
-                 config.moduleRoots.map(f => new JarOrNotFile(f, libName)))
+    Array(new MirroredJarOrNotFile(null, libName)) ++
+                 config.moduleRoots.map(f => new JarOrNotFile(f, libName))
   files0.foreach(_.subscribe(this));
 
   override def files = files0;

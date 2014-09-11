@@ -29,26 +29,10 @@ object Util {
         "Cache-Control" -> "no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0",
         "Pragma" -> "no-cache");
 
-
-  class RichEnumeration[T](enumeration: Enumeration[T]) extends Iterator[T] {
-    def hasNext: Boolean =  enumeration.hasMoreElements();
-    def next: T = enumeration.nextElement();
+  def enumerationToArray[T: ClassManifest](e: Enumeration[T]): Array[T] = {
+    import collection.JavaConversions._
+    e.toArray;
   }
-  class RichIterator[T](iterator: java.util.Iterator[T]) extends Iterator[T] {
-    def hasNext: Boolean = iterator.hasNext();
-    def next: T = iterator.next();
-  }
-  implicit def enumerationToRichEnumeration[T](
-      enumeration: Enumeration[T]): RichEnumeration[T] = {
-    new RichEnumeration(enumeration)
-  }
-  implicit def iteratorToRichIterator[T](
-      iterator: java.util.Iterator[T]): RichIterator[T] = {
-    new RichIterator(iterator);
-  }
-  
-  def enumerationToArray[T](e: Enumeration[T]): Array[T] =
-    enumerationToRichEnumeration(e).toList.toArray;
 
   def stringToHTML(str: String): String = {
     val result = new StringBuilder(str.length);

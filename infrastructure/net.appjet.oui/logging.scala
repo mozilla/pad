@@ -25,13 +25,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import scala.util.Sorting;
 import scala.ref.WeakReference;
 import scala.collection.mutable.{Map, HashMap};
-import scala.collection.jcl.{SetWrapper, Conversions};
 
 import net.sf.json.{JSONObject, JSONArray};
 import org.mozilla.javascript.{Scriptable, Context};
 
-import Util.iteratorToRichIterator;
-import scala.collection.jcl.Conversions._;
+import scala.collection.JavaConversions;
+import JavaConversions._;
 
 trait LoggablePropertyBag {
   def date: Date;
@@ -76,8 +75,8 @@ class LoggableFromMap[T](
   extra: Option[scala.collection.Map[String, String]])
     extends LoggablePropertyBag {
   def this(map: scala.collection.Map[String, T]) = this(map, None);
-  val keys = map.keys.collect.toArray ++
-    extra.map(_.keys.collect.toArray).getOrElse(Array[String]());
+  val keys = map.keys.toArray ++
+    extra.map(_.keys.toArray).getOrElse(Array[String]());
   Sorting.quickSort(keys);
 
   def fillJson(json: JSONObject, 
@@ -89,8 +88,8 @@ class LoggableFromMap[T](
         case i: Int => json.put(k, i);
         case l: Long => json.put(k, l);
         case m: java.util.Map[_,_] => json.put(k, m);
-        case m: scala.collection.Map[String,T] => 
-          json.put(k, fillJson(new JSONObject(), m));
+        case m: scala.collection.Map[_,_] => 
+          json.put(k, fillJson(new JSONObject(), m.asInstanceOf[scala.collection.Map[String, T]]));
         case c: java.util.Collection[_] => json.put(k, c);
         case o: Object => json.put(k, o);
         case _ => {};
@@ -121,7 +120,7 @@ class LoggableFromMap[T](
 class LoggableFromJson(val json: String) extends LoggablePropertyBag {
   val obj = JSONObject.fromObject(json);
   val date = new Date(obj.getLong("date"));
-  val keys = obj.keys().map(String.valueOf(_)).collect.toArray;
+  val keys = obj.keys().map(String.valueOf(_)).toArray;
   // FIXME: is now not sorted in any particular order.
   def value(k: String) = obj.get(k);
   val tabDelimited =
@@ -154,7 +153,7 @@ object GenericLoggerUtils {
   }
   
   val registeredWranglers = 
-    new ConcurrentHashMap[String, SetWrapper[WeakReference[LogWrangler]]];
+    new ConcurrentHashMap[String, scala.collection.mutable.Set[WeakReference[LogWrangler]]];
   def registerWrangler(name: String, wrangler: LogWrangler) {
     wranglers(name) += wrangler.ref;
   }
@@ -163,7 +162,7 @@ object GenericLoggerUtils {
   }
   def wranglers(name: String) = {
     if (! registeredWranglers.containsKey(name)) {
-      val set1 = Conversions.convertSet(
+      val set1 = JavaConversions.asScalaSet(
         new CopyOnWriteArraySet[WeakReference[LogWrangler]]);
       val set2 = registeredWranglers.putIfAbsent(
         name, set1);
@@ -179,7 +178,7 @@ object GenericLoggerUtils {
   def tellWranglers(name: String, lpb: LoggablePropertyBag) {
     for (w <- wranglers(name)) {
       w.get.foreach(_.tell(lpb));
-      if (! w.isValid) {
+      if (w.get.isEmpty) {
         wranglers(name) -= w;
       }
     }
@@ -266,27 +265,22 @@ class GenericLogger(path: String, logName: String, rotateDaily: Boolean) {
   }
 
   def start() {
-    if (   (   config.logIncludeLst != null
-            && config.logIncludeLst.indexOf(logName) != -1)
-	|| (   config.logExcludeLst != null
-            && config.logExcludeLst.indexOf(logName) == -1)) {
-      initLogWriter(new Date());
+    initLogWriter(new Date());
 
-      loggerThread = new Thread("GenericLogger "+logName) {
-	this.setDaemon(true);
-	override def run() {
-	  while (true) {
-	    if (queue.isEmpty()) {
-	      Thread.sleep(500);
-	    } else {
-	      flush(1000);
-	    }
-	  }
-	}
+    loggerThread = new Thread("GenericLogger "+logName) {
+      this.setDaemon(true);
+      override def run() {
+        while (true) {
+          if (queue.isEmpty()) {
+            Thread.sleep(500);
+          } else {
+            flush(1000);
+          }
+        }
       }
-      main.loggers += this;
-      loggerThread.start();
     }
+    main.loggers += this;
+    loggerThread.start();
   }
 
   def log(lpb: LoggablePropertyBag) {
@@ -321,7 +315,7 @@ object profiler extends GenericLogger("backend", "profile", false) {
   def apply(id: String, op: String, method: String, path: String, countAndNanos: (Long, Long)) {
     if (loggerThread != null)
       log(id+":"+op+":"+method+":"+path+":"+
-          Math.round(countAndNanos._2/1000)+
+          math.round(countAndNanos._2/1000)+
           (if (countAndNanos._1 > 1) ":"+countAndNanos._1 else ""));
   }
 //   def apply(state: RequestState, op: String, nanos: long) {
@@ -427,11 +421,11 @@ object cometlatencies {
           try {
             val oldLatencies = latencies;
             latencies = new java.util.concurrent.ConcurrentLinkedQueue[Int];
-            val latArray = oldLatencies.toArray().map(_.asInstanceOf[int]);
+            val latArray = JavaConversions.iterableAsScalaIterable(oldLatencies).toArray;
             Sorting.quickSort(latArray);
             def pct(p: Int) =
               if (latArray.length > 0)
-                latArray(Math.floor((p/100.0)*latArray.length).toInt);
+                latArray(math.floor((p/100.0)*latArray.length).toInt);
               else
                 0;
             def s(a: Any) = String.valueOf(a);
@@ -453,7 +447,7 @@ object cometlatencies {
             }.asInstanceOf[Map[String, Int]]);
             eventlog.log(
               Map("type" -> "streaming-connection-count") ++ 
-              lastCount.get.elements.map(p => (p._1, String.valueOf(p._2))));
+                lastCount.get.iterator.map(p => (p._1, String.valueOf(p._2))));
           } catch {
             case e: Exception => {
               exceptionlog(e);
@@ -509,12 +503,12 @@ class TopNWrangler(n: Int, `type`: String,
   val entries = new ConcurrentHashMap[String, AtomicInteger]();
   def sortedEntries = {
     Sorting.stableSort(
-      convertMap(entries).toSeq, 
+      entries.toSeq, 
       (p1: (String, AtomicInteger), p2: (String, AtomicInteger)) => 
         p1._2.get() > p2._2.get());
   }
   def count = {
-    (convertMap(entries) :\ 0) { (x, y) => x._2.get() + y }
+    (entries :\ 0) { (x, y) => x._2.get() + y }
   }
   
   def topNItems(n: Int): Array[(String, Int)] = 

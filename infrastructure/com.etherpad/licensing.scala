@@ -157,7 +157,7 @@ object Licensing {
       case "testascii" => {
         val one = 17;
         val two = -1L;
-        val three = (Math.random*Math.pow(10, (Math.random*10).toInt)).toInt;
+        val three = (math.random*math.pow(10, (math.random*10).toInt)).toInt;
         println(List(one, two, three).mkString(", "));
         println(List(toInt(toBytes(one)), toLong(toBytes(two)), toInt(toBytes(three))).mkString(", "));
         val bytes = Encryptomatic.asciiToBytes(Encryptomatic.bytesToAscii(Array.concat[Byte](Array(1.toByte), toBytes(one), toBytes(two), toBytes(three))));

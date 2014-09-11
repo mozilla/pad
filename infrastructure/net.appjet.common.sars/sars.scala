@@ -195,7 +195,7 @@ class SarsServer(authKey: String, handler: SarsMessageHandler, host: Option[Stri
             val inputStream = new DataInputStream(cs.getInputStream());
             val outputStream = new DataOutputStream(cs.getOutputStream());
           }
-          val challenge = Math.random*1e20;
+          val challenge = math.random*1e20;
 
           readerWriter.writeMessage(String.valueOf(challenge));
           val res = readerWriter.readString;

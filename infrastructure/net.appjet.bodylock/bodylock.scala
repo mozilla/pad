@@ -43,10 +43,10 @@ class JSRuntimeException(val message: String, val cause: Throwable) extends Exec
       ab += new JSStackFrame {
         val errorLine = elt.getLineNumber;
         val name = elt.getFileName;
-        val code = BodyLock.map.getOrElse(Map[String, String]()).getOrElse(elt.getFileName, "").split("\n"); // 0-indexed.
+        val code = BodyLock.map.getOrElse(collection.Map[String, String]()).getOrElse(elt.getFileName, "").split("\n"); // 0-indexed.
         def errorContext(rad: Int) = {
-          val start_i = Math.max(errorLine-rad, 1)-1;
-          val end_i = Math.min(errorLine+rad, code.length)-1;
+          val start_i = math.max(errorLine-rad, 1)-1;
+          val end_i = math.min(errorLine+rad, code.length)-1;
           (start_i+1, end_i+1, code.slice(start_i, end_i+1));
         }
       }
@@ -61,13 +61,13 @@ class JSCompileException(message: String, cause: org.mozilla.javascript.Evaluato
     List(new JSStackFrame {
       val errorLine = cause.lineNumber();
       val name = cause.sourceName();
-      val code = BodyLock.map.getOrElse(Map[String, String]()).getOrElse(cause.sourceName(), "").split("\n"); // 0-indexed.
+      val code = BodyLock.map.getOrElse(collection.Map[String, String]()).getOrElse(cause.sourceName(), "").split("\n"); // 0-indexed.
       def errorContext(rad: Int) = {
-        val start_i = Math.max(errorLine-rad, 1)-1;
-        val end_i = Math.min(errorLine+rad, code.length)-1;
+        val start_i = math.max(errorLine-rad, 1)-1;
+        val end_i = math.min(errorLine+rad, code.length)-1;
         (start_i+1, end_i+1, code.slice(start_i, end_i+1));
       }
-    }).concat(List(super.frames: _*));
+    }) ++ super.frames;
 }
 
 private[bodylock] class InnerExecutable(val code: String, val script: Script) extends Executable {
@@ -147,7 +147,7 @@ object BodyLock {
     compilationutils.compileToScript(source, sourceName, lineNumber, className);
   }
 
-  def executableFromBytes(bytes: Array[byte], className: String) =
+  def executableFromBytes(bytes: Array[Byte], className: String) =
     new InnerExecutable("(source not available)", compilationutils.bytesToScript(bytes, className));
   
   def unwrapExceptionIfNecessary(e: Throwable): Throwable = {

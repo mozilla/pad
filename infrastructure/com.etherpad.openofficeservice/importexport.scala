@@ -135,7 +135,7 @@ object OpenOfficeService {
     "txt" -> "Text"
   );
 
-  def createTempFile(bytes: Array[byte], suffix: String) = {
+  def createTempFile(bytes: Array[Byte], suffix: String) = {
     var f = File.createTempFile("ooconvert-", if (suffix == null) { null } else if (suffix == "") { "" } else { "."+suffix });
   	if (bytes != null) {
   		val fos = new FileOutputStream(f);
@@ -157,7 +157,7 @@ object OpenOfficeService {
     openOfficeServerPort = port;
   }
 
-  def convertFile(from: String, to: String, bytes: Array[byte]): Array[byte] = {
+  def convertFile(from: String, to: String, bytes: Array[Byte]): Array[Byte] = {
     if (from == to) {
       return bytes;
     }
@@ -208,26 +208,26 @@ object OpenOfficeService {
     if (args.length > 0) {
       soffice = args(0);
       if (soffice.length == 0) {
-        exit(1);
+        System.exit(1);
       }
     }
     
     // Query format:
-    // from: String, to: String, count: Int, bytes: Array[byte]
+    // from: String, to: String, count: Int, bytes: Array[Byte]
     // Response format:
     // status: Int, <data>
-    //   status 0 (success) - <data>: count: Int, bytes: Array[byte]
+    //   status 0 (success) - <data>: count: Int, bytes: Array[Byte]
     //   status 1 (temporary failure) - <data>: <none>
     //   status 2 (permanent failure) - <data>: type: Int
     //               type - 0: unknown failure.
     //                    - 1: unsupported format
     val handler = new SarsMessageHandler {
-      override def handle(b: Array[byte]): Option[Array[byte]] = {
+      override def handle(b: Array[Byte]): Option[Array[Byte]] = {
         val is = new DataInputStream(new ByteArrayInputStream(b));
         val from = is.readUTF;
         val to = is.readUTF;
         val len = is.readInt;
-        val bytes = new Array[byte](len);
+        val bytes = new Array[Byte](len);
         is.readFully(bytes);
         var status = 0;
         var permfailuretype = 0;
