@@ -423,11 +423,10 @@ class StreamingSocket(val id: String, handler: SocketConnectionHandler) {
 }
 
 object ChannelType extends Enumeration {
+  type ChannelType = Value;
   val ShortPolling, LongPolling, Streaming = Value;
 
-  /* Enumeration.valueOf is deprecated in Scala 2.8, but the replacement (withName) is not suitable for the
-   * case where we don't know if an Enumeration exists with the provided name */
-  def withNameOpt(s: String): Option[ChannelType.Value] = values.find(_.toString == s)
+  def withNameOpt(s: String): Option[ChannelType.Value] = values.find(_.toString.toLowerCase == s)
 }
 
 object Channels {
