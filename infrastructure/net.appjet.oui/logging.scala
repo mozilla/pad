@@ -47,9 +47,8 @@ class LoggableFromScriptable(
     extends LoggablePropertyBag {
   def this(scr: Scriptable) = this(scr, None);
   if (extra.isDefined) {
-    for ((k, v) <- extra.get if (! scr.has(k, scr))) { 
-      scr.put(k, scr, v);
-    }
+    val extras = extra.get;
+    extras.keys.foreach { k => if (! scr.has(k, scr)) scr.put(k, scr, String.valueOf(extras.get(k))) }
   }
 
   val keys = 
@@ -99,9 +98,8 @@ class LoggableFromMap[T](
   }
   val json0 = fillJson(new JSONObject(), map);
   if (extra.isDefined) {
-    for ((k, v) <- extra.get if (! json0.has(k))) {
-      json0.put(k, v);
-    }
+    val extras = extra.get;
+    extras.keys.foreach{ k =>  if (! json0.has(k)) json0.put(k, extras(k))}
   }
   if (! json0.has("date")) {
     json0.put("date", System.currentTimeMillis());
