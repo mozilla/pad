@@ -193,17 +193,17 @@ limitations under the License. */ %><%
       <table>
 				<tr>
 					<td class="firsttd"><%= exportOption('html', 'HTML', false) %></td>
-      		<td class="secondtd"><%= exportOption('doc', 'Microsoft Word', true) %></td>
+      		<td class="secondtd">&nbsp;</td>
 				</tr>
 				<tr>
 					<td class="firsttd"><%= exportOption('txt', 'Plain text', false) %></td>
-      		<td class="secondtd"><%= exportOption('pdf', 'PDF', true) %></td>
+      		<td class="secondtd">&nbsp;</td>
 				</tr>
 				<tr>
 					<td class="firsttd"><%= exportOption('link', 'Bookmark file', false,
 																							 '/ep/pad/linkfile?padId='+padId,
 						'This will save a file that, when opened, takes you to this pad.') %></td>
-					<td class="secondtd"><%= exportOption('odt', 'OpenDocument', true) %></td>
+					<td class="secondtd">&nbsp;</td>
 				</tr>
 			</table>
 			<div id="exportmessage"></div>

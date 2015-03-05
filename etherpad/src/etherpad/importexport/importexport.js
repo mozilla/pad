@@ -42,10 +42,7 @@ function onStartup() {
 }
 
 var formats = {
-  pdf: 'application/pdf',
-  doc: 'application/msword',
   html: 'text/html; charset=utf-8',
-  odt: 'application/vnd.oasis.opendocument.text',
   txt: 'text/plain; charset=utf-8'
 }
 
