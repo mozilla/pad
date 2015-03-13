@@ -74,7 +74,7 @@ function gencommon {
     javac \
 	-cp $CP \
 	-d $1 \
-	-target 1.5 \
+	-target 1.7 \
 	$COMMONFILES
     $CC \
 	-classpath $CP \
@@ -129,7 +129,7 @@ function genappserver {
     javac \
 	-cp $CP \
 	-d $1 \
-	-target 1.5 \
+	-target 1.7 \
 	$APPSERVERJAVAFILES
     $CC \
 	-classpath $CP \
@@ -149,7 +149,7 @@ function genajstdlib {
 	javac \
 	    -cp $CP \
 	    -d $1 \
-	    -target 1.5 \
+	    -target 1.7 \
 	    $AJSTDLIBJAVAFILES
     fi
     $CC \
