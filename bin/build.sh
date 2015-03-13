@@ -23,7 +23,7 @@
 
 ETHERPADDIR="$(cd "$(dirname "$0")/.."; pwd)"
 #source "$ETHERPADDIR/bin/exports.sh"
-source "/etc/sysconfig/etherpad"
+#source "/etc/sysconfig/etherpad"
 
 # Rebuild jar
 ( cd "$ETHERPADDIR"/infrastructure; ./bin/makejar.sh; )
