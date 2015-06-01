@@ -188,6 +188,10 @@ function render_account_get(accountId) {
     response.write("Account not found.");
     return true;
   }
+  if (account.domainId != domains.getRequestDomainId()) {
+    response.write("Account not found.");
+    return true;
+  }
   pro_admin_control.renderAdminPage('manage-account', {
     account: account,
     errorDiv: _errorDiv,
