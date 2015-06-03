@@ -219,6 +219,10 @@ function render_account_post(accountId) {
     response.write("Account not found.");
     return true;
   }
+  if (account.domainId != domains.getRequestDomainId()) {
+    response.write("Account not found.");
+    return true;
+  }
 
   pro_accounts.setEmail(account, newEmail);
   pro_accounts.setFullName(account, newFullName);
@@ -231,6 +235,10 @@ function render_account_post(accountId) {
 function render_delete_account_get(accountId) {
   var account = pro_accounts.getAccountById(accountId);
   if (!account) {
+    response.write("Account not found.");
+    return true;
+  }
+  if (account.domainId != domains.getRequestDomainId()) {
     response.write("Account not found.");
     return true;
   }
@@ -252,6 +260,10 @@ function render_delete_account_post(accountId) {
 
   var account = pro_accounts.getAccountById(accountId);
   if (!account) {
+    response.write("Account not found.");
+    return true;
+  }
+  if (account.domainId != domains.getRequestDomainId()) {
     response.write("Account not found.");
     return true;
   }
